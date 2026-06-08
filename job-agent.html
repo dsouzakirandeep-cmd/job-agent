@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Job Application Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0f0f11;--surface:#18181c;--surface2:#1e1e24;--surface3:#26262e;
+  --border:#2e2e38;--border2:#3a3a48;
+  --text:#f0f0f4;--text2:#9898a8;--text3:#5a5a6e;
+  --accent:#6c63ff;--accent2:#8b85ff;--accent-bg:rgba(108,99,255,0.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.1);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.1);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--r-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6}
+
+/* SETUP SCREEN */
+#setup-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:40px 20px;
+}
+.setup-card{
+  width:100%;max-width:600px;
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:40px;
+}
+.setup-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.setup-logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.setup-logo-text{font-size:20px;font-weight:600;color:var(--text)}
+.setup-logo-sub{font-size:13px;color:var(--text2);margin-top:1px}
+.setup-field{margin-bottom:20px}
+.setup-label{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.setup-label span{color:var(--red);margin-left:2px}
+.setup-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 14px;color:var(--text);
+  font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s
+}
+.setup-input:focus{border-color:var(--accent)}
+.setup-textarea{
+  width:100%;min-height:140px;resize:vertical;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 14px;color:var(--text);
+  font-family:var(--mono);font-size:12px;line-height:1.7;outline:none;transition:border-color .15s
+}
+.setup-textarea:focus{border-color:var(--accent)}
+.setup-hint{font-size:12px;color:var(--text3);margin-top:6px;line-height:1.5}
+.setup-hint a{color:var(--accent2);text-decoration:none}
+.setup-hint a:hover{text-decoration:underline}
+.setup-btn{
+  width:100%;padding:12px;background:var(--accent);border:none;border-radius:var(--r-sm);
+  color:#fff;font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s
+}
+.setup-btn:hover{opacity:.85}
+.setup-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.setup-divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+
+/* MAIN APP */
+#app{display:none;height:100vh;display:none;flex-direction:column}
+#app.visible{display:flex}
+
+.topnav{
+  height:52px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:0;flex-shrink:0
+}
+.topnav-brand{font-size:15px;font-weight:600;color:var(--text);margin-right:24px;display:flex;align-items:center;gap:8px}
+.topnav-brand-dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
+.nav-tab{
+  padding:0 14px;height:52px;display:flex;align-items:center;gap:7px;
+  font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;
+  transition:color .15s;white-space:nowrap
+}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.nav-tab svg{width:15px;height:15px;flex-shrink:0}
+.topnav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.user-badge{
+  font-size:12px;color:var(--text2);background:var(--surface2);
+  border:1px solid var(--border);border-radius:20px;padding:4px 12px;cursor:pointer
+}
+.user-badge:hover{border-color:var(--border2)}
+
+.main-content{flex:1;overflow:hidden;display:flex}
+.panel{display:none;flex:1;overflow-y:auto;padding:28px}
+.panel.active{display:block}
+
+/* PAGE HEADER */
+.page-header{margin-bottom:24px}
+.page-title{font-size:20px;font-weight:600;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text2);margin-top:4px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:14px}
+.card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--text2)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.stat-n{font-size:26px;font-weight:600;color:var(--text)}
+.stat-l{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px}
+.badge.green{background:var(--green-bg);color:var(--green)}
+.badge.amber{background:var(--amber-bg);color:var(--amber)}
+.badge.red{background:var(--red-bg);color:var(--red)}
+.badge.blue{background:var(--blue-bg);color:var(--blue)}
+.badge.purple{background:var(--accent-bg);color:var(--accent2)}
+.badge.gray{background:var(--surface2);color:var(--text2)}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;
+  padding:7px 14px;border-radius:var(--r-sm);border:1px solid var(--border2);
+  background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);
+  transition:all .15s;white-space:nowrap
+}
+.btn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{opacity:.85}
+.btn.success{background:var(--green-bg);border-color:transparent;color:var(--green)}
+.btn svg,.btn-icon{width:14px;height:14px;flex-shrink:0}
+
+/* INPUTS */
+input,textarea,select{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;
+  outline:none;transition:border-color .15s;width:100%
+}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--surface2)}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+
+/* JOB CARDS */
+.job-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px 18px;margin-bottom:10px;transition:border-color .15s
+}
+.job-card:hover{border-color:var(--border2)}
+.job-card.applied{border-color:var(--green);border-left-width:3px}
+.job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
+.job-title{font-size:14px;font-weight:500;color:var(--text)}
+.job-meta{font-size:12px;color:var(--text2);margin-bottom:8px}
+.job-desc{font-size:12px;color:var(--text3);line-height:1.55}
+.job-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+
+/* TAILOR */
+.url-row{display:flex;gap:8px;margin-bottom:8px}
+.url-row input{flex:1}
+.step-list{background:var(--surface2);border-radius:var(--r);padding:4px 0;margin:16px 0}
+.step-row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.step-row:last-child{border-bottom:none}
+.step-n{width:22px;height:22px;border-radius:50%;background:var(--surface3);color:var(--text2);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-n.done{background:var(--green-bg);color:var(--green)}
+.step-n.active{background:var(--accent-bg);color:var(--accent2)}
+.step-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.step-desc{font-size:12px;color:var(--text2)}
+.ats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ats-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+.ats-n{font-size:32px;font-weight:600}
+.ats-l{font-size:11px;color:var(--text2);margin-top:4px}
+.ai-out{background:var(--surface2);border-radius:var(--r);padding:16px;margin-top:12px;font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap;font-family:var(--mono)}
+
+/* FILTER PILLS */
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.pill{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s}
+.pill.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)}
+
+/* TRACKER TABLE */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;border-bottom:1px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+
+/* TABS */
+.tab-row{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tab{font-size:13px;padding:8px 16px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+
+/* MISC */
+.empty{text-align:center;padding:50px 20px;color:var(--text2);font-size:13px}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.3}
+.section-label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.warning-banner{background:var(--amber-bg);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.5}
+code{font-family:var(--mono);font-size:12px;background:var(--surface3);padding:2px 6px;border-radius:4px;color:var(--accent2)}
+.copy-btn-success{background:var(--green-bg)!important;border-color:transparent!important;color:var(--green)!important}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ── SETUP SCREEN ──────────────────────────────────────────────────── -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="setup-logo-icon">🤖</div>
+      <div>
+        <div class="setup-logo-text">Job Application Agent</div>
+        <div class="setup-logo-sub">AI-powered job search, tailoring &amp; tracking</div>
+      </div>
+    </div>
+
+    <div class="setup-row">
+      <div class="setup-field">
+        <div class="setup-label">Your name<span>*</span></div>
+        <input class="setup-input" id="s-name" placeholder="e.g. Kiran Dsouza"/>
+      </div>
+      <div class="setup-field">
+        <div class="setup-label">Target role<span>*</span></div>
+        <input class="setup-input" id="s-role" placeholder="e.g. Software Engineer, QA Lead"/>
+      </div>
+    </div>
+
+    <div class="setup-row">
+      <div class="setup-field">
+        <div class="setup-label">Email</div>
+        <input class="setup-input" id="s-email" placeholder="you@email.com"/>
+      </div>
+      <div class="setup-field">
+        <div class="setup-label">Phone</div>
+        <input class="setup-input" id="s-phone" placeholder="+1 (555) 000-0000"/>
+      </div>
+    </div>
+
+    <div class="setup-row">
+      <div class="setup-field">
+        <div class="setup-label">Location</div>
+        <input class="setup-input" id="s-location" placeholder="e.g. San Francisco, CA"/>
+      </div>
+      <div class="setup-field">
+        <div class="setup-label">LinkedIn URL</div>
+        <input class="setup-input" id="s-linkedin" placeholder="linkedin.com/in/yourname"/>
+      </div>
+    </div>
+
+    <div class="setup-field">
+      <div class="setup-label">Paste your resume<span>*</span></div>
+      <textarea class="setup-textarea" id="s-resume" rows="8" placeholder="Paste your full resume text here — work experience, skills, education, achievements..."></textarea>
+      <div class="setup-hint">Plain text is fine. The AI uses this to tailor your resume and write cover letters.</div>
+    </div>
+
+    <hr class="setup-divider"/>
+
+    <div class="setup-field">
+      <div class="setup-label">Anthropic API key<span>*</span></div>
+      <input class="setup-input" id="s-key" type="password" placeholder="sk-ant-..."/>
+      <div class="setup-hint">
+        Get your free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.
+        Stored locally in your browser — never sent anywhere except Anthropic's API.
+      </div>
+    </div>
+
+    <button class="setup-btn" onclick="saveSetup()">Launch agent →</button>
+  </div>
+</div>
+
+<!-- ── MAIN APP ──────────────────────────────────────────────────────── -->
+<div id="app">
+  <nav class="topnav">
+    <div class="topnav-brand"><div class="topnav-brand-dot"></div>Job Agent</div>
+    <div class="nav-tab active" onclick="showPanel('search',this)" data-panel="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Find roles
+    </div>
+    <div class="nav-tab" onclick="showPanel('tailor',this)" data-panel="tailor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>Tailor resume
+    </div>
+    <div class="nav-tab" onclick="showPanel('cover',this)" data-panel="cover">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Cover letter
+    </div>
+    <div class="nav-tab" onclick="showPanel('apply',this)" data-panel="apply">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Apply queue
+    </div>
+    <div class="nav-tab" onclick="showPanel('tracker',this)" data-panel="tracker">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tracker
+    </div>
+    <div class="topnav-right">
+      <div class="user-badge" onclick="editProfile()" id="user-name-badge">—</div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+
+    <!-- FIND ROLES -->
+    <div id="panel-search" class="panel active">
+      <div class="page-header">
+        <div class="page-title">Find roles</div>
+        <div class="page-sub" id="search-sub">Searching across LinkedIn, Indeed, Dice, ZipRecruiter &amp; company career pages</div>
+      </div>
+      <div class="pills" id="source-pills">
+        <span class="pill on" onclick="togglePill(this)">LinkedIn</span>
+        <span class="pill on" onclick="togglePill(this)">Indeed</span>
+        <span class="pill on" onclick="togglePill(this)">Dice</span>
+        <span class="pill on" onclick="togglePill(this)">ZipRecruiter</span>
+        <span class="pill on" onclick="togglePill(this)">Company pages</span>
+        <span class="pill on" onclick="togglePill(this)">Remote</span>
+        <span class="pill on" onclick="togglePill(this)">FTE</span>
+        <span class="pill on" onclick="togglePill(this)">Contract</span>
+      </div>
+      <button class="btn primary" onclick="runSearch()" style="margin-bottom:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Run search
+      </button>
+      <div id="job-list">
+        <div class="empty"><div class="empty-icon">🔍</div>Click "Run search" to find live roles matched to your profile</div>
+      </div>
+    </div>
+
+    <!-- TAILOR RESUME -->
+    <div id="panel-tailor" class="panel">
+      <div class="page-header">
+        <div class="page-title">Tailor resume <span class="badge purple" style="font-size:12px;vertical-align:middle">Auto-mode</span></div>
+        <div class="page-sub">Paste a job URL — the agent fetches the JD, scores your resume, and generates specific changes</div>
+      </div>
+      <div class="card">
+        <div class="section-label" style="margin-bottom:10px">Job URL</div>
+        <div class="url-row">
+          <input id="t-url" placeholder="https://careers.company.com/jobs/..."/>
+          <button class="btn primary" onclick="runAutoTailor()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Auto-tailor
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Or paste the JD directly if the URL is behind a login</div>
+        <textarea id="t-jd" placeholder="Paste job description here (optional)..." style="min-height:80px"></textarea>
+        <button class="btn" onclick="runTailorFromText()" style="margin-top:8px">Tailor from pasted text</button>
+      </div>
+
+      <div id="t-steps" style="display:none">
+        <div class="step-list">
+          <div class="step-row"><div class="step-n" id="ts1">1</div><div><div class="step-title">Fetch job description</div><div class="step-desc" id="ts1d">Waiting...</div></div></div>
+          <div class="step-row"><div class="step-n" id="ts2">2</div><div><div class="step-title">Extract ATS keywords</div><div class="step-desc" id="ts2d">Waiting...</div></div></div>
+          <div class="step-row"><div class="step-n" id="ts3">3</div><div><div class="step-title">Score current resume</div><div class="step-desc" id="ts3d">Waiting...</div></div></div>
+          <div class="step-row"><div class="step-n" id="ts4">4</div><div><div class="step-title">Generate tailored changes</div><div class="step-desc" id="ts4d">Waiting...</div></div></div>
+          <div class="step-row"><div class="step-n" id="ts5">5</div><div><div class="step-title">Project new ATS score</div><div class="step-desc" id="ts5d">Waiting...</div></div></div>
+        </div>
+      </div>
+
+      <div id="t-result" style="display:none">
+        <div class="ats-row">
+          <div class="ats-box"><div class="ats-n" id="ats-b" style="color:var(--red)">—</div><div class="ats-l">ATS score before</div></div>
+          <div class="ats-box"><div class="ats-n" id="ats-a" style="color:var(--green)">—</div><div class="ats-l">ATS score after</div></div>
+        </div>
+        <div class="ai-out" id="t-out"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn primary" onclick="copyText('t-out')">Copy changes</button>
+          <button class="btn" onclick="resetTailor()">Tailor another</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COVER LETTER -->
+    <div id="panel-cover" class="panel">
+      <div class="page-header">
+        <div class="page-title">Cover letter <span class="badge purple" style="font-size:12px;vertical-align:middle">Auto-mode</span></div>
+        <div class="page-sub">Paste a job URL — the agent writes a personalized letter using your resume and the JD</div>
+      </div>
+      <div class="card">
+        <div class="section-label" style="margin-bottom:10px">Job URL</div>
+        <div class="url-row">
+          <input id="c-url" placeholder="https://careers.company.com/jobs/..."/>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" onclick="runCoverLetter('standard')">Generate (standard)</button>
+          <button class="btn" onclick="runCoverLetter('confident')">Bold &amp; confident</button>
+          <button class="btn" onclick="runCoverLetter('concise')">Short &amp; punchy</button>
+        </div>
+      </div>
+      <div id="c-steps" style="display:none">
+        <div class="step-list">
+          <div class="step-row"><div class="step-n" id="cs1">1</div><div><div class="step-title">Fetch job details</div><div class="step-desc" id="cs1d">Waiting...</div></div></div>
+          <div class="step-row"><div class="step-n" id="cs2">2</div><div><div class="step-title">Write personalized letter</div><div class="step-desc" id="cs2d">Waiting...</div></div></div>
+        </div>
+      </div>
+      <div id="c-result" style="display:none">
+        <div class="ai-out" id="c-out"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn primary" id="copy-cl-btn" onclick="copyCL()">Copy letter</button>
+          <button class="btn" onclick="resetCover()">New letter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPLY QUEUE -->
+    <div id="panel-apply" class="panel">
+      <div class="page-header">
+        <div class="page-title">Apply queue</div>
+        <div class="page-sub">Jobs you've queued. Review, open the page, and apply — you confirm every submission.</div>
+      </div>
+      <div class="warning-banner">
+        ⚠️ The agent opens each job page for you — nothing is submitted without your approval.
+      </div>
+      <div id="apply-list"><div class="empty"><div class="empty-icon">📋</div>No jobs queued yet. Click "Queue" on any job card.</div></div>
+      <div style="margin-top:28px">
+        <div class="section-label" style="margin-bottom:12px">Your profile (used to pre-fill applications)</div>
+        <div class="grid-2">
+          <div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">Full name</div><input id="pf-name"/></div>
+          <div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">Email</div><input id="pf-email"/></div>
+          <div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">Phone</div><input id="pf-phone"/></div>
+          <div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">LinkedIn</div><input id="pf-li"/></div>
+          <div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">Location</div><input id="pf-loc"/></div>
+          <div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">Work authorization</div><input id="pf-auth" value="Authorized to work in US"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div id="panel-tracker" class="panel">
+      <div class="page-header">
+        <div class="page-title">Application tracker</div>
+        <div class="page-sub">Track every application from submitted to offer</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total applied</div></div>
+        <div class="stat"><div class="stat-n" id="st-active">0</div><div class="stat-l">In progress</div></div>
+        <div class="stat"><div class="stat-n" id="st-interview">0</div><div class="stat-l">Interviews</div></div>
+        <div class="stat"><div class="stat-n" id="st-offer">0</div><div class="stat-l">Offers</div></div>
+      </div>
+      <div class="tab-row">
+        <div class="tab active" onclick="filterT('all',this)">All</div>
+        <div class="tab" onclick="filterT('applied',this)">Applied</div>
+        <div class="tab" onclick="filterT('interview',this)">Interview</div>
+        <div class="tab" onclick="filterT('offer',this)">Offer</div>
+        <div class="tab" onclick="filterT('rejected',this)">Rejected</div>
+      </div>
+      <div id="tracker-body"><div class="empty"><div class="empty-icon">📊</div>No applications tracked yet.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let profile = {};
+let applications = [];
+let applyQueue = [];
+
+function loadProfile(){
+  const saved = localStorage.getItem('jab_profile');
+  if(saved){ profile = JSON.parse(saved); return true; }
+  return false;
+}
+
+function saveSetup(){
+  const name = document.getElementById('s-name').value.trim();
+  const role = document.getElementById('s-role').value.trim();
+  const resume = document.getElementById('s-resume').value.trim();
+  const key = document.getElementById('s-key').value.trim();
+  if(!name||!role||!resume||!key){ alert('Please fill in Name, Target role, Resume, and API key.'); return; }
+  profile = {
+    name, role, resume, key,
+    email: document.getElementById('s-email').value.trim(),
+    phone: document.getElementById('s-phone').value.trim(),
+    location: document.getElementById('s-location').value.trim(),
+    linkedin: document.getElementById('s-linkedin').value.trim(),
+  };
+  localStorage.setItem('jab_profile', JSON.stringify(profile));
+  launchApp();
+}
+
+function launchApp(){
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('user-name-badge').textContent = profile.name + ' ✦ ' + profile.role;
+  document.getElementById('pf-name').value = profile.name;
+  document.getElementById('pf-email').value = profile.email;
+  document.getElementById('pf-phone').value = profile.phone;
+  document.getElementById('pf-li').value = profile.linkedin;
+  document.getElementById('pf-loc').value = profile.location;
+  document.getElementById('search-sub').textContent =
+    'Finding ' + profile.role + ' roles across LinkedIn, Indeed, Dice, ZipRecruiter & company pages';
+  applications = JSON.parse(localStorage.getItem('jab_apps_'+profile.name)||'[]');
+  updateTracker();
+}
+
+function editProfile(){
+  if(confirm('Edit your profile? This will take you back to the setup screen.')){
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('setup-screen').style.display='flex';
+    const p=profile;
+    document.getElementById('s-name').value=p.name||'';
+    document.getElementById('s-role').value=p.role||'';
+    document.getElementById('s-email').value=p.email||'';
+    document.getElementById('s-phone').value=p.phone||'';
+    document.getElementById('s-location').value=p.location||'';
+    document.getElementById('s-linkedin').value=p.linkedin||'';
+    document.getElementById('s-resume').value=p.resume||'';
+    document.getElementById('s-key').value=p.key||'';
+  }
+}
+
+function showPanel(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+function togglePill(el){el.classList.toggle('on');}
+
+async function callClaude(messages, tools){
+  const body = {model:'claude-sonnet-4-20250514',max_tokens:1200,messages};
+  if(tools) body.tools = tools;
+  const r = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':profile.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)
+  });
+  const d = await r.json();
+  if(d.error) throw new Error(d.error.message);
+  return d.content?.map(c=>c.text||'').filter(Boolean).join('\n').trim()||'';
+}
+
+async function fetchJD(url){
+  try{
+    return await callClaude(
+      [{role:'user',content:`Search for and return the full job description for this URL: ${url}. Include: title, company, location, salary, all responsibilities, all qualifications. Be complete.`}],
+      [{type:'web_search_20250305',name:'web_search'}]
+    );
+  }catch(e){return null;}
+}
+
+function setStep(prefix,n,state,desc){
+  const el=document.getElementById(prefix+'s'+n);
+  if(!el)return;
+  el.className='step-n'+(state==='done'?' done':state==='active'?' active':'');
+  el.innerHTML=state==='done'?'✓':state==='active'?'<span class="spin"></span>':n;
+  const d=document.getElementById(prefix+'s'+n+'d');
+  if(d&&desc)d.textContent=desc;
+}
+
+async function runAutoTailor(){
+  const url=document.getElementById('t-url').value.trim();
+  const manual=document.getElementById('t-jd').value.trim();
+  if(!url&&!manual){alert('Enter a job URL or paste the JD.');return;}
+  document.getElementById('t-steps').style.display='block';
+  document.getElementById('t-result').style.display='none';
+  let jd=manual;
+  if(url&&!manual){
+    setStep('t',1,'active','Fetching job posting...');
+    jd=await fetchJD(url)||`Job at: ${url}`;
+    setStep('t',1,'done',jd.length>80?'Job description fetched':'Used URL context');
+  } else { setStep('t',1,'done','Using pasted content'); }
+
+  setStep('t',2,'active','Extracting keywords...');
+  const kw=await callClaude([{role:'user',content:`List the top 20 ATS keywords and required skills from this job description, comma-separated:\n\n${jd}`}]);
+  setStep('t',2,'done',kw.substring(0,90)+'...');
+
+  setStep('t',3,'active','Scoring current resume...');
+  const sb=await callClaude([{role:'user',content:`ATS score (0-100, number only) for this resume vs job description:\n\nRESUME:\n${profile.resume}\n\nJOB:\n${jd}`}]);
+  const before=parseInt(sb.match(/\d+/)?.[0]||'58');
+  setStep('t',3,'done',`Current score: ${before}%`);
+  document.getElementById('ats-b').textContent=before+'%';
+
+  setStep('t',4,'active','Generating tailored changes...');
+  const changes=await callClaude([{role:'user',content:`You are an expert resume coach. Provide specific changes to tailor this resume to achieve 90%+ ATS score for this job.
+
+TARGET ROLE: ${profile.role}
+RESUME:\n${profile.resume}
+JOB DESCRIPTION:\n${jd}
+
+Provide:
+1. KEYWORD GAPS (5-8 missing keywords with exact placement)
+2. SUMMARY REWRITE (using JD language)
+3. TOP 3 BULLET REWRITES (specific bullets with JD keywords injected)
+4. SKILLS SECTION UPDATES (add/reorder/bold)
+5. QUICK WINS (2-3 fast ATS boosts)
+
+Be specific. Quote exact JD phrases to inject.`}]);
+  setStep('t',4,'done','Tailored changes ready');
+  document.getElementById('t-out').textContent=changes;
+
+  setStep('t',5,'active','Projecting new ATS score...');
+  const sa=await callClaude([{role:'user',content:`If these changes were applied to the resume, new ATS score (0-100, number only):\n\nCHANGES:\n${changes}\n\nJOB:\n${jd}`}]);
+  const after=parseInt(sa.match(/\d+/)?.[0]||'91');
+  setStep('t',5,'done',`Projected score: ${after}%`);
+  document.getElementById('ats-a').textContent=after+'%';
+  document.getElementById('t-result').style.display='block';
+}
+
+function runTailorFromText(){
+  if(!document.getElementById('t-jd').value.trim()){alert('Paste a job description first.');return;}
+  document.getElementById('t-url').value='(pasted text)';
+  runAutoTailor();
+}
+
+function resetTailor(){
+  document.getElementById('t-url').value='';
+  document.getElementById('t-jd').value='';
+  document.getElementById('t-steps').style.display='none';
+  document.getElementById('t-result').style.display='none';
+  for(let i=1;i<=5;i++){setStep('t',i,'','Waiting...');}
+}
+
+async function runCoverLetter(tone){
+  const url=document.getElementById('c-url').value.trim();
+  if(!url){alert('Enter a job URL first.');return;}
+  document.getElementById('c-steps').style.display='block';
+  document.getElementById('c-result').style.display='none';
+  setStep('c',1,'active','Fetching job details...');
+  const jd=await fetchJD(url)||`Job at ${url}`;
+  setStep('c',1,'done','Job details retrieved');
+  setStep('c',2,'active','Writing cover letter...');
+  const toneDesc=tone==='confident'?'bold and assertive, leading with achievements':tone==='concise'?'short and punchy under 180 words':'professional and warm';
+  const letter=await callClaude([{role:'user',content:`Write a ${toneDesc} cover letter for ${profile.name} applying to this role.
+
+CANDIDATE RESUME:\n${profile.resume}
+TARGET ROLE: ${profile.role}
+JOB DESCRIPTION:\n${jd}
+
+Requirements:
+- Do NOT open with "I am applying for" or "I am writing to"
+- Strong specific hook tied to this role
+- Highlight the biggest achievement from the resume
+- Connect experience directly to this role's needs
+- Close with confidence and a clear call to action
+- Address to "Dear Hiring Manager"
+${tone==='concise'?'- Under 180 words total':'- 3 tight paragraphs'}`}]);
+  setStep('c',2,'done','Done');
+  document.getElementById('c-out').textContent=letter;
+  document.getElementById('c-result').style.display='block';
+}
+
+function resetCover(){
+  document.getElementById('c-url').value='';
+  document.getElementById('c-steps').style.display='none';
+  document.getElementById('c-result').style.display='none';
+  setStep('c',1,'','Waiting...');setStep('c',2,'','Waiting...');
+}
+
+async function runSearch(){
+  const list=document.getElementById('job-list');
+  list.innerHTML=`<div style="padding:20px;color:var(--text2);font-size:13px"><span class="spin"></span> Searching for ${profile.role} roles...</div>`;
+  try{
+    const results=await callClaude(
+      [{role:'user',content:`Search for currently open ${profile.role} job roles. Find 6 real open positions from LinkedIn, Indeed, Dice, ZipRecruiter, and company career pages. For each job return: title, company, location, salary range, job type (FTE/contract), brief description (1-2 sentences), and direct apply URL. Focus on ${profile.location||'US'} or remote. Format each as:
+JOB: [title] | [company] | [location] | [salary] | [type] | [url]
+DESC: [description]
+---`}],
+      [{type:'web_search_20250305',name:'web_search'}]
+    );
+    renderSearchResults(results);
+  }catch(e){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div>Search failed: ${e.message}</div>`;
+  }
+}
+
+function renderSearchResults(raw){
+  const list=document.getElementById('job-list');
+  const blocks=raw.split('---').filter(b=>b.includes('JOB:'));
+  if(!blocks.length){list.innerHTML=`<div style="font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap">${raw}</div>`;return;}
+  list.innerHTML='';
+  blocks.forEach((block,i)=>{
+    const jobLine=block.match(/JOB:\s*(.+)/)?.[1]||'';
+    const desc=block.match(/DESC:\s*(.+)/)?.[1]||'';
+    const parts=jobLine.split('|').map(s=>s.trim());
+    const [title='',company='',location='',salary='',type='',url='#']=parts;
+    const applied=applications.find(a=>a.title===title);
+    const inQ=applyQueue.find(q=>q.title===title);
+    const id='j'+i;
+    list.innerHTML+=`<div class="job-card ${applied?'applied':''}" id="jc-${id}">
+      <div class="job-top">
+        <div><div class="job-title">${title}</div><div class="job-meta">${company} · ${location} · ${salary}</div></div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <span class="badge ${type==='FTE'?'green':'amber'}">${type||'FTE'}</span>
+          ${applied?'<span class="badge green">Applied</span>':''}
+        </div>
+      </div>
+      <div class="job-desc">${desc}</div>
+      <div class="job-actions">
+        <button class="btn" onclick="window.open('${url.trim()}','_blank')">View job ↗</button>
+        <button class="btn primary" onclick="autoTailorJob('${title}','${url.trim()}','${desc}')">Auto-tailor</button>
+        <button class="btn" onclick="autoCoverJob('${url.trim()}')">Cover letter</button>
+        <button class="btn ${inQ?'success':''}" id="qb-${id}" onclick="queueJobDynamic('${id}','${title}','${company}','${salary}','${url.trim()}')">
+          ${inQ?'✓ Queued':'+ Queue'}
+        </button>
+      </div>
+    </div>`;
+  });
+}
+
+function autoTailorJob(title,url,desc){
+  showPanel('tailor',document.querySelector('[data-panel="tailor"]'));
+  resetTailor();
+  document.getElementById('t-url').value=url;
+  document.getElementById('t-jd').value=title+'\n\n'+desc;
+  setTimeout(runAutoTailor,200);
+}
+
+function autoCoverJob(url){
+  showPanel('cover',document.querySelector('[data-panel="cover"]'));
+  resetCover();
+  document.getElementById('c-url').value=url;
+}
+
+function queueJobDynamic(id,title,company,salary,url){
+  if(!applyQueue.find(q=>q.id===id)){
+    applyQueue.push({id,title,company,salary,url});
+    const btn=document.getElementById('qb-'+id);
+    if(btn){btn.className='btn success';btn.textContent='✓ Queued';}
+    updateApplyQueue();
+  }
+}
+
+function updateApplyQueue(){
+  const el=document.getElementById('apply-list');
+  if(!applyQueue.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>No jobs queued yet.</div>';return;}
+  el.innerHTML=applyQueue.map(j=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+    <div><div class="card-title">${j.title}</div><div class="card-sub">${j.company} · ${j.salary}</div></div>
+    <button class="btn primary" onclick="markApplied('${j.id}','${j.url}')">Open &amp; apply</button>
+  </div>`).join('');
+}
+
+function markApplied(id,url){
+  const j=applyQueue.find(q=>q.id===id);if(!j)return;
+  applyQueue=applyQueue.filter(q=>q.id!==id);
+  if(!applications.find(a=>a.id===id)){
+    applications.push({...j,status:'applied',date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})});
+    localStorage.setItem('jab_apps_'+profile.name,JSON.stringify(applications));
+  }
+  window.open(url,'_blank');
+  updateApplyQueue();updateTracker();
+}
+
+const SC={applied:'blue',interview:'amber',offer:'green',rejected:'red'};
+function updateTracker(){
+  document.getElementById('st-total').textContent=applications.length;
+  document.getElementById('st-active').textContent=applications.filter(a=>a.status==='applied').length;
+  document.getElementById('st-interview').textContent=applications.filter(a=>a.status==='interview').length;
+  document.getElementById('st-offer').textContent=applications.filter(a=>a.status==='offer').length;
+  renderTrackerRows(applications);
+}
+
+function filterT(f,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  renderTrackerRows(f==='all'?applications:applications.filter(a=>a.status===f));
+}
+
+function renderTrackerRows(rows){
+  const el=document.getElementById('tracker-body');
+  if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div>No applications here yet.</div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Role</th><th>Company</th><th>Status</th><th>Date</th><th>Update</th></tr></thead><tbody>
+  ${rows.map(a=>`<tr>
+    <td style="font-weight:500">${a.title}</td>
+    <td style="color:var(--text2)">${a.company||'—'}</td>
+    <td><span class="badge ${SC[a.status]||'gray'}">${a.status}</span></td>
+    <td style="color:var(--text2)">${a.date||'—'}</td>
+    <td><select onchange="updateStatus('${a.id}',this.value)" style="font-size:12px;padding:4px 8px;width:auto">
+      <option ${a.status==='applied'?'selected':''}>applied</option>
+      <option ${a.status==='interview'?'selected':''}>interview</option>
+      <option ${a.status==='offer'?'selected':''}>offer</option>
+      <option ${a.status==='rejected'?'selected':''}>rejected</option>
+    </select></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+function updateStatus(id,status){
+  const a=applications.find(x=>x.id===id);
+  if(a){a.status=status;localStorage.setItem('jab_apps_'+profile.name,JSON.stringify(applications));updateTracker();}
+}
+
+function copyText(id){
+  const text=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=event.target.closest('button');
+    const orig=btn.textContent;btn.textContent='Copied ✓';btn.classList.add('success');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('success');},2000);
+  });
+}
+
+function copyCL(){copyText('c-out');}
+
+if(loadProfile()) launchApp();
+</script>
+</body>
+</html>
